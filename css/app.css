@@ -105,7 +105,8 @@ main > * { animation: subir .28s ease both; }
 main > *:nth-child(2) { animation-delay: .04s; }
 main > *:nth-child(3) { animation-delay: .08s; }
 main > *:nth-child(4) { animation-delay: .12s; }
-@keyframes subir { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* Sin "to": termina en la opacidad propia del elemento (los días pasados quedan atenuados). */
+@keyframes subir { from { opacity: 0; transform: translateY(8px); } }
 
 /* Portada del día */
 .hero {
@@ -288,7 +289,7 @@ dialog#sheet {
   border-radius: 26px 26px 0 0; box-shadow: var(--shadow-lg);
 }
 dialog#sheet[open] { animation: hoja .22s ease-out; }
-@keyframes hoja { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes hoja { from { transform: translateY(40px); opacity: .4; } }
 dialog#sheet::backdrop { background: rgba(5, 15, 12, .5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .sheet-in { padding: 10px 16px calc(18px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; }
 .sheet-in::before { content: ""; justify-self: center; width: 42px; height: 5px; border-radius: 3px; background: var(--line); }
