@@ -88,19 +88,39 @@
     var t = hoy();
     return S.fechas.filter(function (f) { return f.fecha >= t; }).sort(byFecha).slice(0, n);
   }
+  // Color del bloque según la hora: mañana ámbar, tarde verde azulado, noche violeta.
+  function franja(hora) {
+    if (!hora) return '';
+    var hh = +hora.slice(0, 2);
+    return hh < 12 ? 't-man' : hh < 19 ? 't-tar' : 't-noc';
+  }
+  function bloqueLi(b) { return '<li class="' + franja(b.hora) + '"><b>' + esc(b.hora || '—') + '</b><span>' + esc(b.t) + '</span></li>'; }
   function fechaRow(f) {
-    var n = diff(f.fecha), cls = n === 0 ? ' today' : (n <= 7 && n > 0 ? ' soon' : '');
-    var num = n < 0 ? '<span class="fecha-n">✓</span>' :
+    var n = diff(f.fecha), cls = n < 0 ? ' past' : n === 0 ? ' today' : n <= 3 ? ' urgent' : n <= 7 ? ' soon' : '';
+    var num = n < 0 ? '<span class="fecha-n past">✓</span>' :
       '<span class="fecha-n' + cls + '">' + (n === 0 ? 'Hoy' : n) + (n === 0 ? '' : '<small>' + (n === 1 ? 'día' : 'días') + '</small>') + '</span>';
     return '<button class="fecha-row" type="button" data-action="editar-fecha" data-id="' + f.id + '">' + num +
       '<span class="fecha-b">' + esc(f.t) + '<span>' + fmt(f.fecha) + (f.nota ? ' · ' + esc(f.nota) : '') + '</span></span></button>';
   }
 
   /* ---------- Hoy ---------- */
+  // Cada número tiene su color: de rojo (1) a verde (10).
+  function tono(i) { return Math.round((i - 1) * 14); }
+  function nivel(v) { return v <= 3 ? 'Baja' : v <= 6 ? 'Media' : v <= 8 ? 'Buena' : 'Muy alta'; }
   function escala(k, label, v) {
     var b = '';
-    for (var i = 1; i <= 10; i++) b += '<button type="button" data-action="registro" data-k="' + k + '" data-v="' + i + '" aria-pressed="' + (v === i) + '" aria-label="' + label + ' ' + i + '">' + i + '</button>';
-    return '<div class="scale"><p class="scale-l">' + label + '<span>1 muy baja · 10 muy alta</span></p><div class="sc" role="group" aria-label="' + label + '">' + b + '</div></div>';
+    for (var i = 1; i <= 10; i++) b += '<button type="button" data-action="registro" data-k="' + k + '" data-v="' + i + '" style="--h:' + tono(i) + '" aria-pressed="' + (v === i) + '" aria-label="' + label + ' ' + i + '">' + i + '</button>';
+    var estado = typeof v === 'number' ? '<span class="on" style="--sc-c:hsl(' + tono(v) + ' 70% 42%)">' + v + ' · ' + nivel(v) + '</span>' : '<span>1 muy baja · 10 muy alta</span>';
+    return '<div class="scale"><p class="scale-l">' + label + estado + '</p><div class="sc" role="group" aria-label="' + label + '">' + b + '</div></div>';
+  }
+  function saludo() { var h = new Date().getHours(); return h >= 5 && h < 12 ? 'Buenos días' : h >= 12 && h < 20 ? 'Buenas tardes' : 'Buenas noches'; }
+  function anillo(hechas, total) {
+    var r = 38, c = 2 * Math.PI * r, p = total ? hechas / total : 0;
+    return '<svg class="ring" viewBox="0 0 96 96" role="img" aria-label="' + hechas + ' de ' + total + ' hechas">' +
+      '<circle class="ring-bg" cx="48" cy="48" r="' + r + '"/>' +
+      '<circle class="ring-fg" cx="48" cy="48" r="' + r + '" stroke-dasharray="' + (c * p).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 48 48)"/>' +
+      '<text class="ring-n" x="48" y="50" text-anchor="middle">' + hechas + '/' + total + '</text>' +
+      '<text class="ring-l" x="48" y="66" text-anchor="middle">hechas</text></svg>';
   }
   function renderHoy() {
     var t = hoy(), reg = S.registro[t] || {};
@@ -112,8 +132,12 @@
     var registrado = typeof reg.energia === 'number' && typeof reg.animo === 'number';
     var como = '<section class="card"><h2>¿Cómo estás?</h2><p class="sub">Un toque en cada una. Puedes cambiarlo cuando quieras.</p>' +
       escala('energia', 'Energía', reg.energia) + escala('animo', 'Ánimo', reg.animo) + '</section>';
+    var total = pend.length + hechasHoy.length, prox1 = proximasFechas(1)[0];
+    var heroT = !total ? 'Día en blanco' : !pend.length ? '¡Día cerrado!' : pend.length + (pend.length === 1 ? ' cosa por hacer' : ' cosas por hacer');
+    var heroP = prox1 ? 'Próximo: <b>' + esc(prox1.t) + '</b> ' + rel(diff(prox1.fecha)) + '.' : 'Sin fechas clave a la vista.';
+    var h = '<section class="hero"><div><p class="hero-s">' + saludo() + '</p><p class="hero-t">' + heroT + '</p><p class="hero-p">' + heroP + '</p></div>' + anillo(hechasHoy.length, total) + '</section>';
     // Si aún no registras cómo estás, va primero: la energía decide cuánto cabe en el día.
-    var h = registrado ? '' : como;
+    if (!registrado) h += como;
     h += '<section class="card"><div class="card-h"><h2>Para hoy</h2><span class="count">' + hechasHoy.length + ' hechas · ' + pend.length + ' por hacer</span></div>';
     if (baja && pend.length > 1) h += '<p class="note calm">Energía baja. Elige una sola cosa para hoy y mueve el resto a mañana, sin culpa.</p>';
     if (pend.length || hechasHoy.length) {
@@ -121,14 +145,14 @@
         return tareaLi(x, '<button class="mini-btn" type="button" data-action="manana" data-id="' + x.id + '">Mañana</button>');
       }).join('') + hechasHoy.map(function (x) { return tareaLi(x); }).join('') + '</ul>';
     } else {
-      h += '<p class="empty">Nada anotado para hoy. Toca <b>+</b> para agregar algo.</p>';
+      h += '<div class="empty-big"><b>Nada anotado para hoy</b>Toca el botón + para agregar algo.</div>';
     }
     if (pend.length > limite && !baja) h += '<p class="note">Tienes ' + pend.length + ' cosas para hoy. Tres es un buen máximo: mueve el resto a mañana.</p>';
     if (pend.length < limite) {
       var sugeridas = S.tareas.filter(function (x) { return !x.done && (!x.fecha || x.fecha > t); }).sort(byFecha).slice(0, 3);
       if (sugeridas.length) {
         h += '<p class="group-t" style="margin-top:16px">¿Sumar alguna?</p><ul class="list">' + sugeridas.map(function (x) {
-          return tareaLi(x, '<button class="mini-btn" type="button" data-action="a-hoy" data-id="' + x.id + '">Hoy</button>');
+          return tareaLi(x, '<button class="mini-btn go" type="button" data-action="a-hoy" data-id="' + x.id + '">+ Hoy</button>');
         }).join('') + '</ul>';
       }
     }
@@ -138,7 +162,7 @@
     var bl = bloquesDe(dow(t));
     if (bl.length) {
       h += '<section class="card"><h2>Tu ' + DIAS[dow(t)].toLowerCase() + '</h2><p class="sub">De tu semana tipo.</p><ul class="blocks">' +
-        bl.map(function (b) { return '<li><b>' + esc(b.hora || '') + '</b><span>' + esc(b.t) + '</span></li>'; }).join('') + '</ul></section>';
+        bl.map(bloqueLi).join('') + '</ul></section>';
     }
 
     var prox = proximasFechas(3);
@@ -154,8 +178,8 @@
     var domingo = addDays(lunes, 6);
     var titulo = semOff === 0 ? 'Esta semana' : semOff === 1 ? 'Próxima semana' : semOff === -1 ? 'Semana pasada' :
       parseD(lunes).getDate() + ' ' + new Intl.DateTimeFormat('es-CL', { month: 'short' }).format(parseD(lunes)).replace('.', '') + ' al ' + parseD(domingo).getDate();
-    var h = '<div class="week-nav"><button class="btn ghost" type="button" data-action="sem" data-d="-1" aria-label="Semana anterior">‹</button><p>' + titulo + '</p>' +
-      '<button class="btn ghost" type="button" data-action="sem" data-d="1" aria-label="Semana siguiente">›</button></div>';
+    var h = '<div class="week-nav"><button class="nav-btn" type="button" data-action="sem" data-d="-1" aria-label="Semana anterior">‹</button><p>' + titulo + '</p>' +
+      '<button class="nav-btn" type="button" data-action="sem" data-d="1" aria-label="Semana siguiente">›</button></div>';
     for (var i = 0; i < 7; i++) {
       var ds = addDays(lunes, i), n = diff(ds);
       var fe = S.fechas.filter(function (f) { return f.fecha === ds; });
@@ -163,7 +187,7 @@
       var bl = bloquesDe(i);
       var body = fe.map(function (f) { return '<span class="pill fecha">' + esc(f.t) + '</span>'; }).join('') +
         ta.map(function (x) { return '<span class="pill tarea">' + esc(x.t) + '</span>'; }).join('');
-      if (bl.length) body += '<ul class="blocks" style="margin-top:' + (fe.length || ta.length ? '8px' : '0') + '">' + bl.map(function (b) { return '<li><b>' + esc(b.hora || '') + '</b><span>' + esc(b.t) + '</span></li>'; }).join('') + '</ul>';
+      if (bl.length) body += '<ul class="blocks" style="margin-top:' + (fe.length || ta.length ? '8px' : '0') + '">' + bl.map(bloqueLi).join('') + '</ul>';
       if (!body) body = '<p class="empty">Libre</p>';
       h += '<section class="day' + (n === 0 ? ' is-today' : n < 0 ? ' is-past' : '') + '"><h3>' + DIAS[i] + '<span>' + parseD(ds).getDate() + (n === 0 ? ' · hoy' : '') + '</span></h3>' + body + '</section>';
     }
@@ -192,16 +216,16 @@
   function renderTareas() {
     var t = hoy(), abiertas = S.tareas.filter(function (x) { return !x.done; }).sort(byFecha);
     var grupos = [
-      ['Atrasadas', abiertas.filter(function (x) { return x.fecha && x.fecha < t; })],
-      ['Hoy', abiertas.filter(function (x) { return x.fecha === t; })],
-      ['Próximas', abiertas.filter(function (x) { return x.fecha && x.fecha > t; })],
-      ['Sin fecha', abiertas.filter(function (x) { return !x.fecha; })]
+      ['Atrasadas', abiertas.filter(function (x) { return x.fecha && x.fecha < t; }), 'var(--coral)'],
+      ['Hoy', abiertas.filter(function (x) { return x.fecha === t; }), 'var(--teal)'],
+      ['Próximas', abiertas.filter(function (x) { return x.fecha && x.fecha > t; }), 'var(--amber)'],
+      ['Sin fecha', abiertas.filter(function (x) { return !x.fecha; }), 'var(--violet)']
     ];
     var h = '<section class="card">';
     if (!abiertas.length) h += '<p class="empty">No tienes tareas abiertas. Toca <b>+</b> para anotar una.</p>';
     grupos.forEach(function (g) {
       if (!g[1].length) return;
-      h += '<p class="group-t">' + g[0] + ' · ' + g[1].length + '</p><ul class="list">' + g[1].map(function (x) { return tareaLi(x); }).join('') + '</ul>';
+      h += '<p class="group-t" style="--c:' + g[2] + '"><i></i>' + g[0] + ' · ' + g[1].length + '</p><ul class="list">' + g[1].map(function (x) { return tareaLi(x); }).join('') + '</ul>';
     });
     var hechas = S.tareas.filter(function (x) { return x.done; }).sort(function (a, b) { return (b.cerrada || '').localeCompare(a.cerrada || ''); });
     if (hechas.length) {
