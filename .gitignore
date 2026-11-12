@@ -1,0 +1,5 @@
+*.json
+!manifest.webmanifest
+!.claude/launch.json
+.env
+node_modules/
