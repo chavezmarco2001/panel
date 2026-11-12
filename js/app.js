@@ -118,7 +118,7 @@
     var r = 38, c = 2 * Math.PI * r, p = total ? hechas / total : 0;
     return '<svg class="ring" viewBox="0 0 96 96" role="img" aria-label="' + hechas + ' de ' + total + ' hechas">' +
       '<circle class="ring-bg" cx="48" cy="48" r="' + r + '"/>' +
-      '<circle class="ring-fg" cx="48" cy="48" r="' + r + '" stroke-dasharray="' + (c * p).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 48 48)"/>' +
+      (p > 0 ? '<circle class="ring-fg" cx="48" cy="48" r="' + r + '" stroke-dasharray="' + (c * p).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 48 48)"/>' : '') +
       '<text class="ring-n" x="48" y="50" text-anchor="middle">' + hechas + '/' + total + '</text>' +
       '<text class="ring-l" x="48" y="66" text-anchor="middle">hechas</text></svg>';
   }
