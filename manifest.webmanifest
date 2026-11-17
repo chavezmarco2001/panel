@@ -8,6 +8,11 @@
   "background_color": "#0E6B62",
   "theme_color": "#0E6B62",
   "lang": "es",
+  "shortcuts": [
+    { "name": "Anotar", "short_name": "Anotar", "url": "./#anotar", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Cierre del día", "short_name": "Cierre", "url": "./#cierre", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Modo foco", "short_name": "Foco", "url": "./#foco", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ],
   "icons": [
     {
       "src": "icons/icon-192.png",

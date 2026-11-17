@@ -5,7 +5,11 @@ Mi día, mi semana, mis tareas y mis fechas, en una app instalable en el celular
 - **Hoy**: hasta tres cosas para cerrar en el día y cómo estoy (energía y ánimo).
 - **Semana**: mi semana tipo (bloques fijos) junto con las fechas y tareas de cada día.
 - **Tareas**: pendientes por atrasadas, hoy, próximas y sin fecha.
-- **Fechas**: entregas y plazos con los días que faltan.
+- **Fechas**: entregas y plazos con los días que faltan. Las marcadas como «hito de mi titulación» arman el camino en Avance.
+- **Avance**: racha amable (los días de energía baja no la cortan y hay un comodín por semana), calendario de días, semana en números, energía y avance de 28 días, camino a la titulación y logros.
+- **Modo foco**: temporizador de 15, 25 o 50 minutos con la pantalla encendida; los minutos se suman al avance.
+- **Cierre del día**: marca lo hecho, elige hasta 3 cosas para mañana y cierra el día.
+- **Atajos**: al mantener presionado el ícono aparecen «Anotar», «Cierre del día» y «Modo foco».
 
 Los datos se guardan **solo en el celular** (no hay servidor ni cuenta). Para respaldarlos o pasarlos a otro teléfono: Ajustes → Exportar / Importar respaldo.
 
